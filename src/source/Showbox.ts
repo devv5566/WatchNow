@@ -24,8 +24,11 @@ export class Showbox extends Source {
   public async handleInternal(ctx: Context, _type: ContentType, id: Id): Promise<SourceResult[]> {
     let cookie = ctx.config.febboxCookie?.trim();
     if (!cookie) {
+      console.log('[Showbox] No cookie configured');
       return [];
     }
+    
+    // Normalize cookie - add ui= prefix if missing
     if (!cookie.startsWith('ui=')) {
       cookie = 'ui=' + cookie;
     }
@@ -42,13 +45,17 @@ export class Showbox extends Source {
     }
 
     try {
+      console.log('[Showbox] Requesting:', apiUrl.replace(/cookie=.*/, 'cookie=***'));
       const apiData = await this.fetcher.json(ctx, new URL(apiUrl), {
         headers: {
           'User-Agent': 'DevStreamzAddon/1.0',
         },
       });
 
+      console.log('[Showbox] Response:', JSON.stringify(apiData).substring(0, 500));
+
       if (!apiData || !apiData.success || !apiData.versions || !Array.isArray(apiData.versions)) {
+        console.log('[Showbox] No streams in response');
         return [];
       }
 
