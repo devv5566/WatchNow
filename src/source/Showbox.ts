@@ -52,11 +52,10 @@ export class Showbox extends Source {
       const results: SourceResult[] = [];
 
       for (const version of apiData.versions) {
-        const versionName = version.name || 'Unknown';
         if (version.links && Array.isArray(version.links)) {
           for (const link of version.links) {
             if (!link.url) continue;
-            const streamTitle = this.formatShowboxTitle(titleName, year, versionName, link);
+            const streamTitle = this.formatShowboxTitle(titleName, year, link);
             const meta: Meta = {
               title: streamTitle,
               countryCodes: [CountryCode.multi],
@@ -88,7 +87,7 @@ export class Showbox extends Source {
     return 'ORG';
   }
 
-  private formatShowboxTitle(name: string, year: number, versionName: string, link: any): string {
+  private formatShowboxTitle(name: string, year: number, link: any): string {
     const qualityEmoji = (() => {
       const q = this.parseQualityFromLabel(link.quality || link.name);
       if (q === '4K') return '🔥4K UHD';
@@ -114,7 +113,7 @@ export class Showbox extends Source {
 
     const langMap: Record<string, string> = { en: '🇬🇧', it: '🇮🇹', fr: '🇫🇷', de: '🇩🇪' };
     const langs = (link.language || '').split(/[ ,;]/).filter(Boolean);
-    const flags = langs.map(l => langMap[l.toLowerCase()] || '').filter(Boolean).join(' / ');
+    const flags = langs.map((l: string) => langMap[l.toLowerCase()] || '').filter(Boolean).join(' / ');
     const langLine = flags ? `🗣️ ${flags}` : '';
 
     const sourceTags = ['🔍Torrentio', 'ℹ️ WatchFlix'].join(' ');
