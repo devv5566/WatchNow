@@ -136,6 +136,19 @@ export function landingTemplate(manifest: CustomManifest) {
       background-clip: text;
     }
 
+    .hero-by {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--blue-light);
+      text-decoration: none;
+      letter-spacing: 0.04em;
+      opacity: 0.85;
+      transition: opacity 0.2s;
+      margin-top: -8px;
+    }
+
+    .hero-by:hover { opacity: 1; }
+
     .hero-sub {
       font-size: 1rem;
       color: var(--muted);
@@ -390,6 +403,7 @@ export function landingTemplate(manifest: CustomManifest) {
   <div class="hero">
     <img src="${inlineLogo}" alt="WatchNow Logo" class="hero-logo"/>
     <h1 class="hero-title">WatchNow</h1>
+    <a href="https://dev-streamz-navy.vercel.app/configure" target="_blank" rel="noopener" class="hero-by">by DevStreamz</a>
     <p class="hero-sub">A premium Stremio add-on delivering Movies &amp; Series streams with rich quality metadata.</p>
     <div class="badge-row">
       <span class="badge">🔥 4K UHD</span>
