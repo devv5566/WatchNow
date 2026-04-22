@@ -1,13 +1,13 @@
+import { envGet, Fetcher } from '../utils';
 import { FourKHDHub } from './FourKHDHub';
 import { HDHub4u } from './HDHub4u';
 import { Showbox } from './Showbox';
-import { Fetcher } from '../utils';
 import { Source } from './Source';
 
 export * from './Source';
 
 export const createSources = (fetcher: Fetcher): Source[] => {
-
+  const disabledSources = envGet('DISABLED_SOURCES')?.split(',') ?? [];
 
   return [
     new FourKHDHub(fetcher),
