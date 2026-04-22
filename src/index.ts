@@ -15,8 +15,6 @@ import { HDHub4u } from './source/HDHub4u';
 import { Showbox } from './source/Showbox';
 import { clearCache, contextFromRequestAndResponse, envGet, envIsProd, Fetcher, StreamResolver } from './utils';
 import { LOGO_BLUE } from './logo';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
 
 if (envIsProd()) {
   console.log = console.warn = console.error = console.info = console.debug = () => { /* disable in favor of logger */ };
@@ -96,31 +94,58 @@ addon.get('/logo.png', (_req: Request, res: Response) => {
 
 addon.use(express.static('src'));
 
-// ── Install click counter ──────────────────────────────────────────────────
-const STATS_FILE = path.join(process.cwd(), 'install-stats.json');
+// ── Install click counter (Upstash Redis) ─────────────────────────────────
+const REDIS_KEY = 'watchnow_installs';
 
-function readStats(): { installs: number; lastInstall: string | null } {
-  try {
-    return JSON.parse(fs.readFileSync(STATS_FILE, 'utf8'));
-  } catch {
-    return { installs: 0, lastInstall: null };
+async function redisIncr(): Promise<number> {
+  const url = envGet('UPSTASH_URL');
+  const token = envGet('UPSTASH_TOKEN');
+  if (!url || !token) return -1;
+  const r = await fetch(`${url}/incr/${REDIS_KEY}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await r.json() as { result: number };
+  return data.result ?? -1;
+}
+
+async function redisGet(): Promise<number> {
+  const url = envGet('UPSTASH_URL');
+  const token = envGet('UPSTASH_TOKEN');
+  if (!url || !token) return -1;
+  const r = await fetch(`${url}/get/${REDIS_KEY}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await r.json() as { result: string | null };
+  return data.result ? parseInt(data.result, 10) : 0;
+}
+
+async function redisLastInstall(ts?: string): Promise<string | null> {
+  const url = envGet('UPSTASH_URL');
+  const token = envGet('UPSTASH_TOKEN');
+  if (!url || !token) return null;
+  if (ts) {
+    await fetch(`${url}/set/watchnow_last_install/${encodeURIComponent(ts)}`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return ts;
   }
+  const r = await fetch(`${url}/get/watchnow_last_install`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  const data = await r.json() as { result: string | null };
+  return data.result ?? null;
 }
 
-function writeStats(data: { installs: number; lastInstall: string | null }) {
-  try { fs.writeFileSync(STATS_FILE, JSON.stringify(data, null, 2), 'utf8'); } catch { /* ignore */ }
-}
-
-addon.post('/track-install', (_req: Request, res: Response) => {
-  const stats = readStats();
-  stats.installs += 1;
-  stats.lastInstall = new Date().toISOString();
-  writeStats(stats);
+addon.post('/track-install', async (_req: Request, res: Response) => {
+  const now = new Date().toISOString();
+  await Promise.all([redisIncr(), redisLastInstall(now)]);
   res.json({ ok: true });
 });
 
 // Private stats — only accessible with ?key=YOUR_ADMIN_KEY
-addon.get('/admin/stats', (req: Request, res: Response) => {
+addon.get('/admin/stats', async (req: Request, res: Response) => {
   const adminKey = envGet('ADMIN_KEY') || 'watchnow-secret-2024';
   if (req.query['key'] !== adminKey) {
     res.status(403).send(`<!DOCTYPE html><html><head><title>403</title>
@@ -129,9 +154,10 @@ addon.get('/admin/stats', (req: Request, res: Response) => {
     <body><h1>403</h1><p>Invalid or missing key.</p></body></html>`);
     return;
   }
-  const stats = readStats();
-  const lastStr = stats.lastInstall
-    ? new Date(stats.lastInstall).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST'
+  const configured = !!(envGet('UPSTASH_URL') && envGet('UPSTASH_TOKEN'));
+  const [count, lastRaw] = await Promise.all([redisGet(), redisLastInstall()]);
+  const lastStr = lastRaw
+    ? new Date(lastRaw).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) + ' IST'
     : 'Never';
   const logoB64 = LOGO_BLUE;
   res.setHeader('content-type', 'text/html');
@@ -155,6 +181,7 @@ addon.get('/admin/stats', (req: Request, res: Response) => {
     .label{font-size:0.75rem;font-weight:700;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);}
     .meta{margin-top:20px;font-size:0.8rem;color:var(--muted);border-top:1px solid var(--border);padding-top:16px;}
     .meta span{color:var(--text);}
+    .warn{background:rgba(239,68,68,0.1);border:1px solid rgba(239,68,68,0.3);border-radius:10px;padding:12px 16px;font-size:0.8rem;color:#fca5a5;max-width:320px;text-align:center;}
     .refresh{margin-top:8px;font-size:0.72rem;color:var(--muted);}
     .refresh a{color:var(--blue-light);text-decoration:none;}
   </style>
@@ -164,16 +191,18 @@ addon.get('/admin/stats', (req: Request, res: Response) => {
   <img src="${logoB64}" class="logo" alt="WatchNow"/>
   <h1>WatchNow — Install Stats</h1>
   <p class="subtitle">Private dashboard · auto-refreshes every 30s</p>
+  ${!configured ? `<div class="warn">⚠️ UPSTASH_URL and UPSTASH_TOKEN env vars not set — counts won't persist. Add them on Vercel.</div>` : ''}
   <div class="card">
-    <div class="count">${stats.installs}</div>
+    <div class="count">${configured ? count : '?'}</div>
     <div class="label">Total Install Clicks</div>
-    <div class="meta">Last click: <span>${lastStr}</span></div>
+    <div class="meta">Last click: <span>${configured ? lastStr : 'N/A — Redis not configured'}</span></div>
   </div>
   <p class="refresh">Auto-refreshing · <a href="?key=${adminKey}">Refresh now</a></p>
 </body>
 </html>`);
 });
 // ─────────────────────────────────────────────────────────────────────────────
+
 
 addon.use('/', (new ExtractController(logger, fetcher, extractorRegistry)).router);
 addon.use('/', (new ConfigureController(sources, extractors)).router);
