@@ -45,58 +45,63 @@ export class ToonWorld4All extends Source {
      this.fetcher = fetcher;
    }
 
-  public async handleInternal(ctx: Context, _type: ContentType, id: Id): Promise<SourceResult[]> {
-    let tmdbId: TmdbId | undefined;
-    let showPageUrl: URL | undefined;
-    let name: string = '';
+   public async handleInternal(ctx: Context, _type: ContentType, id: Id): Promise<SourceResult[]> {
+     try {
+       let tmdbId: TmdbId | undefined;
+       let showPageUrl: URL | undefined;
+       let name: string = '';
 
-    if (id instanceof Tw4aId) {
-      this.fetcher.logger.info(`Handling ToonWorld ID: ${id.toString()}`, ctx);
-      showPageUrl = new URL(id.slug, this.baseUrl);
-      name = id.slug.replace(/-/g, ' '); // crude name from slug
-      if (id.season && id.episode) {
-          tmdbId = { tmdbId: 0, season: id.season, episode: id.episode } as unknown as TmdbId; // dummy tmdbId
-      }
-    } else {
-      tmdbId = await getTmdbId(ctx, this.fetcher, id);
-      if (tmdbId.season && tmdbId.episode) {
-        [name] = await getTmdbNameAndYear(ctx, this.fetcher, tmdbId);
-        showPageUrl = await this.findShowPageUrl(ctx, name, tmdbId);
-      }
-    }
+       if (id instanceof Tw4aId) {
+         this.fetcher.logger.info(`Handling ToonWorld ID: ${id.toString()}`, ctx);
+         showPageUrl = new URL(id.slug, this.baseUrl);
+         name = id.slug.replace(/-/g, ' '); // crude name from slug
+         if (id.season && id.episode) {
+           tmdbId = { tmdbId: 0, season: id.season, episode: id.episode } as unknown as TmdbId; // dummy tmdbId
+         }
+       } else {
+         tmdbId = await getTmdbId(ctx, this.fetcher, id);
+         if (tmdbId.season && tmdbId.episode) {
+           [name] = await getTmdbNameAndYear(ctx, this.fetcher, tmdbId);
+           showPageUrl = await this.findShowPageUrl(ctx, name, tmdbId);
+         }
+       }
 
-    if (!showPageUrl || !tmdbId?.season || !tmdbId?.episode) {
-      this.fetcher.logger.warn(`Missing required data for ToonWorld: showPageUrl=${showPageUrl}, season=${tmdbId?.season}, episode=${tmdbId?.episode}`, ctx);
-      return [];
-    }
+       if (!showPageUrl || !tmdbId?.season || !tmdbId?.episode) {
+         this.fetcher.logger.warn(`Missing required data for ToonWorld: showPageUrl=${showPageUrl}, season=${tmdbId?.season}, episode=${tmdbId?.episode}`, ctx);
+         return [];
+       }
 
-    // 3. Derive the archive episode slug and fetch the episode page
-    const episodeSlug = this.buildEpisodeSlug(showPageUrl, name, tmdbId);
-    const episodePageUrl = new URL(`/episode/${episodeSlug}`, this.archiveBaseUrl);
-    this.fetcher.logger.info(`Derived archive episode slug: ${episodeSlug}`, ctx);
+       // 3. Derive the archive episode slug and fetch the episode page
+       const episodeSlug = this.buildEpisodeSlug(showPageUrl, name, tmdbId);
+       const episodePageUrl = new URL(`/episode/${episodeSlug}`, this.archiveBaseUrl);
+       this.fetcher.logger.info(`Derived archive episode slug: ${episodeSlug}`, ctx);
 
-    let episodeHtml: string;
-    try {
-      episodeHtml = await this.fetcher.text(ctx, episodePageUrl);
-      this.fetcher.logger.info(`Successfully fetched archive episode page: ${episodePageUrl.href}`, ctx);
-    } catch {
-      // Episode page not found — try alternate slug derived directly from name
-      const fallbackSlug = this.buildFallbackSlug(name, tmdbId);
-      this.fetcher.logger.info(`Primary slug failed, trying fallback: ${fallbackSlug}`, ctx);
-      if (fallbackSlug === episodeSlug) {
-        return [];
-      }
-      const fallbackUrl = new URL(`/episode/${fallbackSlug}`, this.archiveBaseUrl);
-      try {
-        episodeHtml = await this.fetcher.text(ctx, fallbackUrl);
-      } catch {
-        return [];
-      }
-    }
+       let episodeHtml: string;
+       try {
+         episodeHtml = await this.fetcher.text(ctx, episodePageUrl);
+         this.fetcher.logger.info(`Successfully fetched archive episode page: ${episodePageUrl.href}`, ctx);
+       } catch {
+         // Episode page not found — try alternate slug derived directly from name
+         const fallbackSlug = this.buildFallbackSlug(name, tmdbId);
+         this.fetcher.logger.info(`Primary slug failed, trying fallback: ${fallbackSlug}`, ctx);
+         if (fallbackSlug === episodeSlug) {
+           return [];
+         }
+         const fallbackUrl = new URL(`/episode/${fallbackSlug}`, this.archiveBaseUrl);
+         try {
+           episodeHtml = await this.fetcher.text(ctx, fallbackUrl);
+         } catch {
+           return [];
+         }
+       }
 
-    // 4. Extract redirect links from the episode page and resolve them
-    return this.extractSourceResults(ctx, episodeHtml, episodePageUrl);
-  }
+       // 4. Extract redirect links from the episode page and resolve them
+       return this.extractSourceResults(ctx, episodeHtml, episodePageUrl);
+     } catch (error) {
+       this.fetcher.logger.error(`ToonWorld4All error: ${error}`, error);
+       return [];
+     }
+   }
 
   /**
    * Searches toonworld4all.me for the show and returns the WordPress post URL.

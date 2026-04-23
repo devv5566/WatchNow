@@ -23,40 +23,49 @@ export class ToonWorldCatalog {
     return this.scrapeCategory(ctx, 'category/cartoon-series/', page);
   }
 
-  private async scrapeCategory(ctx: Context, path: string, page: number = 1): Promise<MetaPreview[]> {
-    const url = page > 1 ? `${this.baseUrl}/${path}page/${page}/` : `${this.baseUrl}/${path}`;
-    this.fetcher.logger.info(`Fetching ToonWorld catalog: ${url}`, ctx);
-    const html = await this.fetcher.text(ctx, new URL(url));
-    const $ = cheerio.load(html);
+   private async scrapeCategory(ctx: Context, path: string, page: number = 1): Promise<MetaPreview[]> {
+     const url = page > 1 ? `${this.baseUrl}/${path}page/${page}/` : `${this.baseUrl}/${path}`;
+     this.fetcher.logger.info(`Fetching ToonWorld catalog: ${url}`, ctx);
 
-    const metas: MetaPreview[] = [];
-    const posts = $('article.herald-post');
-    this.fetcher.logger.info(`Found ${posts.length} posts on page`, ctx);
+     let html: string;
+     try {
+       html = await this.fetcher.text(ctx, new URL(url));
+     } catch (error) {
+       this.fetcher.logger.error(`Failed to fetch ToonWorld catalog page ${url}: ${error}`, error);
+       return [];
+     }
 
-    posts.each((_i, el) => {
-      const titleLink = $(el).find('.entry-title a');
-      const title = titleLink.text().trim();
-      const href = titleLink.attr('href');
-      const poster = $(el).find('.wp-post-image').attr('src');
+     const $ = cheerio.load(html);
+     const metas: MetaPreview[] = [];
 
-      if (title && href) {
-        try {
-          const absoluteUrl = new URL(href, this.baseUrl);
-          const slug = absoluteUrl.pathname.replace(/^\/|\/$/g, '');
-        
-          metas.push({
-            id: `tw4a:${slug}`,
-            type: title.toLowerCase().includes('movie') || path.includes('movies') ? 'movie' : 'series',
-            name: title,
-            poster: poster,
-            description: `Watch ${title} on ToonWorld4All`,
-          });
-        } catch (e) {
-          // Ignore malformed URLs
-        }
-      }
-    });
+     // Use a flexible selector to match any article post across different page layouts
+     const posts = $('article').filter((_i, el) => $(el).find('.entry-title a').length > 0);
+     this.fetcher.logger.info(`Found ${posts.length} posts on page`, ctx);
 
-    return metas;
-  }
+     posts.each((_i, el) => {
+       const titleLink = $(el).find('.entry-title a');
+       const title = titleLink.text().trim();
+       const href = titleLink.attr('href');
+       const poster = $(el).find('.wp-post-image').attr('src');
+
+       if (title && href) {
+         try {
+           const absoluteUrl = new URL(href, this.baseUrl);
+           const slug = absoluteUrl.pathname.replace(/^\/|\/$/g, '');
+
+           metas.push({
+             id: `tw4a:${slug}`,
+             type: title.toLowerCase().includes('movie') || path.includes('movies') ? 'movie' : 'series',
+             name: title,
+             poster: poster,
+             description: `Watch ${title} on ToonWorld4All`,
+           });
+         } catch (e) {
+           // Ignore malformed URLs
+         }
+       }
+     });
+
+     return metas;
+   }
 }

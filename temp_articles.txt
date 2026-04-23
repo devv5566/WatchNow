@@ -1,0 +1,5 @@
+D:\new addon\homepage.html:287:			  <article class="herald-fa-item herald-cat-111">	    
+D:\new addon\homepage.html:306:			  <article class="herald-fa-item herald-cat-294">	    
+D:\new addon\homepage.html:325:			  <article class="herald-fa-item herald-cat-294">	    
+D:\new addon\homepage.html:344:			  <article class="herald-fa-item herald-cat-111">	    
+D:\new addon\homepage.html:363:			  <article class="herald-fa-item herald-cat-320">	    
