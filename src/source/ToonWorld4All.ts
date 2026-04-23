@@ -3,7 +3,7 @@ import levenshtein from 'fast-levenshtein';
 import { ContentType } from 'stremio-addon-sdk';
 import { NotFoundError } from '../error';
 import { Context, CountryCode } from '../types';
-import { Fetcher, getTmdbId, getTmdbNameAndYear, Id, TmdbId } from '../utils';
+import { Fetcher, getTmdbId, getTmdbNameAndYear, Id, TmdbId, Tw4aId } from '../utils';
 import { resolveRedirectUrl } from './hd-hub-helper';
 import { Source, SourceResult } from './Source';
 
@@ -20,7 +20,7 @@ export class ToonWorld4All extends Source {
 
   public readonly label = 'ToonWorld4All';
 
-  public readonly contentTypes: ContentType[] = ['series'];
+  public readonly contentTypes: ContentType[] = ['movie', 'series'];
 
   public readonly countryCodes: CountryCode[] = [
     CountryCode.multi,
@@ -44,18 +44,25 @@ export class ToonWorld4All extends Source {
   }
 
   public async handleInternal(ctx: Context, _type: ContentType, id: Id): Promise<SourceResult[]> {
-    const tmdbId = await getTmdbId(ctx, this.fetcher, id);
+    let tmdbId: TmdbId | undefined;
+    let showPageUrl: URL | undefined;
+    let name: string = '';
 
-    if (!tmdbId.season || !tmdbId.episode) {
-      return [];
+    if (id instanceof Tw4aId) {
+      showPageUrl = new URL(id.slug, this.baseUrl);
+      name = id.slug.replace(/-/g, ' '); // crude name from slug
+      if (id.season && id.episode) {
+          tmdbId = { tmdbId: 0, season: id.season, episode: id.episode } as unknown as TmdbId; // dummy tmdbId
+      }
+    } else {
+      tmdbId = await getTmdbId(ctx, this.fetcher, id);
+      if (tmdbId.season && tmdbId.episode) {
+        [name] = await getTmdbNameAndYear(ctx, this.fetcher, tmdbId);
+        showPageUrl = await this.findShowPageUrl(ctx, name, tmdbId);
+      }
     }
 
-    // 1. Resolve show name from TMDB
-    const [name] = await getTmdbNameAndYear(ctx, this.fetcher, tmdbId);
-
-    // 2. Search for the show on ToonWorld4All
-    const showPageUrl = await this.findShowPageUrl(ctx, name, tmdbId);
-    if (!showPageUrl) {
+    if (!showPageUrl || !tmdbId?.season || !tmdbId?.episode) {
       return [];
     }
 
@@ -125,10 +132,20 @@ export class ToonWorld4All extends Source {
       });
 
     if (!matched.length) {
+      this.fetcher.logger.warn(`No matching show page found on ToonWorld4All for: ${name}`, ctx);
       return undefined;
     }
 
     const best = matched[0]!;
+    // Relaxed matching for anime titles which can be very long
+    const clean = (s: string) => s.replace(/\[.*?]/g, '').replace(/\(.*?\)/g, '').trim();
+    const diff = levenshtein.get(clean(best.text), name, { useCollator: true });
+    
+    if (diff > 15 && !clean(best.text).toLowerCase().includes(name.toLowerCase())) {
+        this.fetcher.logger.warn(`Best match for ${name} was too different: ${best.text} (diff: ${diff})`, ctx);
+        return undefined;
+    }
+
     this.fetcher.logger.info(`Found show page on ToonWorld4All: ${best.text} -> ${best.href}`, ctx);
     try {
       return new URL(best.href);
@@ -261,6 +278,10 @@ export class ToonWorld4All extends Source {
         this.fetcher.logger.error(`Failed to resolve ToonWorld4All redirect: ${task.redirectHref}`, error);
       }
     }));
+
+    if (!resolvedResults.length) {
+        this.fetcher.logger.warn(`No sources could be resolved for episode page: ${referer.href}`, ctx);
+    }
 
     return resolvedResults;
   };

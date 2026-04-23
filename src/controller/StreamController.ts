@@ -3,7 +3,7 @@ import { Request, Response, Router } from 'express';
 import { ContentType } from 'stremio-addon-sdk';
 import winston from 'winston';
 import { Source } from '../source';
-import { contextFromRequestAndResponse, envIsProd, Id, ImdbId, StreamResolver, TmdbId } from '../utils';
+import { contextFromRequestAndResponse, envIsProd, Id, ImdbId, StreamResolver, TmdbId, Tw4aId } from '../utils';
 
 export class StreamController {
   public readonly router: Router;
@@ -34,6 +34,8 @@ export class StreamController {
       id = TmdbId.fromString(rawId.replace('tmdb:', ''));
     } else if (rawId.startsWith('tt')) {
       id = ImdbId.fromString(rawId);
+    } else if (rawId.startsWith('tw4a:')) {
+      id = Tw4aId.fromString(rawId.replace('tw4a:', ''));
     } else {
       res.status(400).send(`Unsupported ID: ${rawId}`);
 

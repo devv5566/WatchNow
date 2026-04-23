@@ -22,8 +22,21 @@ export const buildManifest = (sources: Source[], extractors: Extractor[], config
       'movie',
       'series',
     ],
-    catalogs: [],
-    idPrefixes: ['tmdb:', 'tt'],
+    catalogs: [
+      {
+        id: 'tw4a_latest',
+        type: 'series',
+        name: 'ToonWorld — Latest Anime',
+        extra: [{ name: 'skip' }],
+      },
+      {
+        id: 'tw4a_movies',
+        type: 'movie',
+        name: 'ToonWorld — Anime Movies',
+        extra: [{ name: 'skip' }],
+      },
+    ],
+    idPrefixes: ['tmdb:', 'tt', 'tw4a:'],
     logo: logoUrl,
     background: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?w=1920&q=80',
     behaviorHints: {

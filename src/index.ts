@@ -6,9 +6,10 @@ import express, { NextFunction, Request, Response } from 'express';
 // eslint-disable-next-line import/no-named-as-default
 import rateLimit from 'express-rate-limit';
 import winston from 'winston';
-import { ConfigureController, ExtractController, ManifestController, StreamController } from './controller';
+import { CatalogController, ConfigureController, ExtractController, ManifestController, StreamController } from './controller';
 import { BlockedError, logErrorAndReturnNiceString } from './error';
 import { createExtractors, ExtractorRegistry } from './extractor';
+import { ToonWorldCatalog } from './catalog/ToonWorldCatalog';
 import { createSources, Source } from './source';
 import { FourKHDHub } from './source/FourKHDHub';
 import { HDHub4u } from './source/HDHub4u';
@@ -51,6 +52,7 @@ const fetcher = new Fetcher(cachedAxios, logger);
 
 const sources = createSources(fetcher);
 const extractors = createExtractors(fetcher);
+const toonWorldCatalog = new ToonWorldCatalog(fetcher);
 
 const addon = express();
 addon.set('trust proxy', true);
@@ -207,6 +209,7 @@ addon.get('/admin/stats', async (req: Request, res: Response) => {
 addon.use('/', (new ExtractController(logger, fetcher, extractorRegistry)).router);
 addon.use('/', (new ConfigureController(sources, extractors)).router);
 addon.use('/', (new ManifestController(sources, extractors)).router);
+addon.use('/', (new CatalogController(toonWorldCatalog)).router);
 
 const streamResolver = new StreamResolver(logger, extractorRegistry);
 addon.use('/', (new StreamController(logger, sources, streamResolver)).router);
