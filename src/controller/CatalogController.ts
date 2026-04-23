@@ -1,7 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { MetaPreview } from 'stremio-addon-sdk';
 import { ToonWorldCatalog } from '../catalog/ToonWorldCatalog';
-import { contextFromRequestAndResponse, getDefaultConfig } from '../utils';
+import { contextFromRequestAndResponse, parseConfig } from '../utils';
 
 export class CatalogController {
   public readonly router: Router;
@@ -18,7 +18,7 @@ export class CatalogController {
   private async getCatalog(req: Request, res: Response) {
     try {
       const id = req.params['id'];
-      const config = req.params['config'] ? JSON.parse(req.params['config'] as string) : getDefaultConfig();
+      const config = parseConfig(req.params['config']);
       const ctx = contextFromRequestAndResponse(req, res);
       ctx.config = config;
 

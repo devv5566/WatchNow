@@ -2,7 +2,7 @@ import { Request, Response, Router } from 'express';
 import { Extractor } from '../extractor';
 import { Source } from '../source';
 import { Config } from '../types';
-import { buildManifest, getDefaultConfig } from '../utils';
+import { buildManifest, parseConfig } from '../utils';
 
 export class ManifestController {
   public readonly router: Router;
@@ -21,7 +21,7 @@ export class ManifestController {
   }
 
   private getManifest(req: Request, res: Response) {
-    const config: Config = JSON.parse(req.params['config'] as string || JSON.stringify(getDefaultConfig()));
+    const config: Config = parseConfig(req.params['config']);
 
     const manifest = buildManifest(this.sources, this.extractors, config);
 

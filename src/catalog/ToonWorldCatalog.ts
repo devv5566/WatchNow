@@ -25,12 +25,15 @@ export class ToonWorldCatalog {
 
   private async scrapeCategory(ctx: Context, path: string, page: number = 1): Promise<MetaPreview[]> {
     const url = page > 1 ? `${this.baseUrl}/${path}page/${page}/` : `${this.baseUrl}/${path}`;
+    this.fetcher.logger.info(`Fetching ToonWorld catalog: ${url}`, ctx);
     const html = await this.fetcher.text(ctx, new URL(url));
     const $ = cheerio.load(html);
 
     const metas: MetaPreview[] = [];
+    const posts = $('article.herald-post');
+    this.fetcher.logger.info(`Found ${posts.length} posts on page`, ctx);
 
-    $('article.herald-post').each((_i, el) => {
+    posts.each((_i, el) => {
       const titleLink = $(el).find('.entry-title a');
       const title = titleLink.text().trim();
       const href = titleLink.attr('href');

@@ -18,3 +18,18 @@ export const isExtractorDisabled = (config: Config, extractor: Extractor): boole
 export const excludeResolutionConfigKey = (resolution: string): string => `excludeResolution_${resolution}`;
 
 export const isResolutionExcluded = (config: Config, resolution: string): boolean => excludeResolutionConfigKey(resolution) in config;
+
+export const parseConfig = (configStr: string | undefined): Config => {
+    if (!configStr) return getDefaultConfig();
+    try {
+        const decoded = decodeURIComponent(configStr);
+        return JSON.parse(decoded);
+    } catch (e) {
+        try {
+            return JSON.parse(configStr);
+        } catch (e2) {
+            console.error('Failed to parse config:', configStr, e, e2);
+            return getDefaultConfig();
+        }
+    }
+};
