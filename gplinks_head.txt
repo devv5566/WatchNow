@@ -1,0 +1,34 @@
+HTTP/1.1 302 Found
+Date: Thu, 23 Apr 2026 20:29:16 GMT
+Content-Type: text/html; charset=UTF-8
+Connection: keep-alive
+X-Powered-By: PHP/7.4.33
+set-cookie: AppSession=d695852d81f4e64b4f83f7f0db698ab8; path=/; HttpOnly; secure
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-cache, no-store, must-revalidate, max-age=0
+Pragma: no-cache
+X-Frame-Options: SAMEORIGIN,SAMEORIGIN
+X-Robots-Tag: noindex, nofollow
+Location: https://powergam.online?lid=YWZUelNSdA&pid=MTk0NTcw&vid=MTAxNzUzMDk5OQ&pages=Mw
+Server: cloudflare
+Vary: User-Agent,User-Agent
+X-XSS-Protection: 1; mode=block
+X-Content-Type-Options: nosniff
+X-turbo-charged-by: LiteSpeed
+cf-cache-status: DYNAMIC
+Report-To: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=5UFm%2B92c%2Brn5CwmUrMyCk1y5FhCgdBWJglgxn0Y8cshVlRI4RXJTz0ggtjcn6FG88RT4QJtm%2Fw6jpiyZ0ECByhPW5zchJf6J36NQpY4r61NcIn%2FauiB%2BYgZDTCY8bCIJ9y71t55gTWYS"}]}
+Nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+CF-RAY: 9f0f9e8c785091e6-DEL
+alt-svc: h3=":443"; ma=86400
+
+HTTP/1.1 403 Forbidden
+Date: Thu, 23 Apr 2026 20:29:17 GMT
+Content-Type: text/html
+Connection: keep-alive
+Server: cloudflare
+Nel: {"report_to":"cf-nel","success_fraction":0.0,"max_age":604800}
+cf-cache-status: DYNAMIC
+Report-To: {"group":"cf-nel","max_age":604800,"endpoints":[{"url":"https://a.nel.cloudflare.com/report/v4?s=Pb2EpFKnj7uj%2B8ypna9qU8KcbbTRanajqPjxZrGMFxNMOlMXthqCcpu%2B8N5K3TlEPEwTJfdnOz%2F42Cc%2BbRWY2yQTPkXBw3CJ5rqAVdu4oFdbCI8uRQMEvoAi55CxzLz8VmFFbLRuvIx2XIa84uI%3D"}]}
+CF-RAY: 9f0f9e91c91391e6-DEL
+alt-svc: h3=":443"; ma=86400
+

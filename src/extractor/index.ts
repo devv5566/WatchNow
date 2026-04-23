@@ -7,7 +7,9 @@ import { Extractor } from './Extractor';
 import { Fastream } from './Fastream';
 import { FileLions } from './FileLions';
 import { FileMoon } from './FileMoon';
+import { Filepress } from './Filepress';
 import { Fsst } from './Fsst';
+import { GDFlix } from './GDFlix';
 import { HubCloud } from './HubCloud';
 import { HubDrive } from './HubDrive';
 import { KinoGer } from './KinoGer';
@@ -31,42 +33,44 @@ export * from './ExtractorRegistry';
 export const createExtractors = (fetcher: Fetcher): Extractor[] => {
   const disabledExtractors = envGet('DISABLED_EXTRACTORS')?.split(',') ?? [];
 
-  const hubCloud = new HubCloud(fetcher);
+   const hubCloud = new HubCloud(fetcher);
 
-  return [
-    // HubCloud/HubDrive MUST come before Direct, otherwise Direct's catch-all
-    // supports() swallows hubcloud URLs before HubCloud extractor can handle them.
-    hubCloud,
-    new HubDrive(fetcher, hubCloud),
-    new Direct(fetcher),
-    new DoodStream(fetcher),
-    new Dropload(fetcher),
-    new Fastream(fetcher),
-    new FileLions(fetcher),
-    new FileMoon(fetcher),
-    new Fsst(fetcher),
-    new KinoGer(fetcher),
-    new LuluStream(fetcher),
-    new Mixdrop(fetcher),
-    new RgShows(fetcher),
-    new SaveFiles(fetcher),
-    new StreamEmbed(fetcher),
-    new Streamtape(fetcher),
-    new SuperVideo(fetcher),
-    new Uqload(fetcher),
-    new Vidora(fetcher),
-    new VidSrc(fetcher, [ // https://vidsrc.domains/
-      'vidsrcme.ru',
-      'vidsrcme.su',
-      'vidsrc-me.ru',
-      'vidsrc-me.su',
-      'vidsrc-embed.ru',
-      'vidsrc-embed.su',
-      'vsrc.su',
-    ]),
-    new VixSrc(fetcher),
-    new Voe(fetcher),
-    new YouTube(fetcher),
-    new ExternalUrl(fetcher), // fallback extractor which must come last
-  ].filter(extractor => !disabledExtractors.includes(extractor.id));
-};
+   return [
+     // HubCloud/HubDrive MUST come before Direct, otherwise Direct's catch-all
+     // supports() swallows hubcloud URLs before HubCloud extractor can handle them.
+     hubCloud,
+     new HubDrive(fetcher, hubCloud),
+     new Filepress(fetcher),
+     new GDFlix(fetcher),
+     new Direct(fetcher),
+     new DoodStream(fetcher),
+     new Dropload(fetcher),
+     new Fastream(fetcher),
+     new FileLions(fetcher),
+     new FileMoon(fetcher),
+     new Fsst(fetcher),
+     new KinoGer(fetcher),
+     new LuluStream(fetcher),
+     new Mixdrop(fetcher),
+     new RgShows(fetcher),
+     new SaveFiles(fetcher),
+     new StreamEmbed(fetcher),
+     new Streamtape(fetcher),
+     new SuperVideo(fetcher),
+     new Uqload(fetcher),
+     new Vidora(fetcher),
+     new VidSrc(fetcher, [ // https://vidsrc.domains/
+       'vidsrcme.ru',
+       'vidsrcme.su',
+       'vidsrc-me.ru',
+       'vidsrc-me.su',
+       'vidsrc-embed.ru',
+       'vidsrc-embed.su',
+       'vsrc.su',
+     ]),
+     new VixSrc(fetcher),
+     new Voe(fetcher),
+     new YouTube(fetcher),
+     new ExternalUrl(fetcher), // fallback extractor which must come last
+   ].filter(extractor => !disabledExtractors.includes(extractor.id));
+ };
