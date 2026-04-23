@@ -129,7 +129,7 @@ export class ToonWorld4All extends Source {
     }
 
     const best = matched[0]!;
-    this.logger.info(`Found show page on ToonWorld4All: ${best.text} -> ${best.href}`, ctx);
+    this.fetcher.logger.info(`Found show page on ToonWorld4All: ${best.text} -> ${best.href}`, ctx);
     try {
       return new URL(best.href);
     } catch {
@@ -258,7 +258,7 @@ export class ToonWorld4All extends Source {
           },
         });
       } catch (error) {
-        this.logger.error(`Failed to resolve ToonWorld4All redirect: ${task.redirectHref}`, error);
+        this.fetcher.logger.error(`Failed to resolve ToonWorld4All redirect: ${task.redirectHref}`, error);
       }
     }));
 

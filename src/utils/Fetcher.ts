@@ -60,7 +60,7 @@ export class Fetcher {
   private readonly MAX_WAIT_RETRY_AFTER = 10000;
 
   private readonly axios: AxiosInstance;
-  private readonly logger: winston.Logger;
+  public readonly logger: winston.Logger;
 
   private readonly proxyConfig = new Map<string, ProxyConfig>();
   private readonly rateLimitedCache = new Cacheable({ primary: new Keyv({ store: new CacheableMemory({ lruSize: 1024 }) }) });
