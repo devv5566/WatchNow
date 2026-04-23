@@ -22,15 +22,15 @@ export class ToonWorld4All extends Source {
 
   public readonly contentTypes: ContentType[] = ['movie', 'series'];
 
-  public readonly countryCodes: CountryCode[] = [
-    CountryCode.multi,
-    CountryCode.hi,
-    CountryCode.ta,
-    CountryCode.te,
-    CountryCode.ml,
-    CountryCode.ja,
-    CountryCode.en,
-  ];
+   public readonly countryCodes: CountryCode[] = [
+     CountryCode.multi,
+     CountryCode.hi,
+     CountryCode.ta,
+     CountryCode.te,
+     CountryCode.ml,
+     CountryCode.ja,
+     CountryCode.en,
+   ];
 
   public readonly baseUrl = 'https://toonworld4all.me';
 
@@ -38,10 +38,12 @@ export class ToonWorld4All extends Source {
 
   private readonly fetcher: Fetcher;
 
-  public constructor(fetcher: Fetcher) {
-    super();
-    this.fetcher = fetcher;
-  }
+   public override readonly priority = 1; // anime-only source, runs after multi-purpose sources
+
+   public constructor(fetcher: Fetcher) {
+     super();
+     this.fetcher = fetcher;
+   }
 
   public async handleInternal(ctx: Context, _type: ContentType, id: Id): Promise<SourceResult[]> {
     let tmdbId: TmdbId | undefined;
