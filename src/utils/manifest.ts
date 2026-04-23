@@ -17,6 +17,7 @@ export const buildManifest = (sources: Source[], extractors: Extractor[], config
     description: 'WatchNow — stream Movies & Series in 4K, 1080p and more. Powered by DevStreams.',
     resources: [
       'stream',
+      'meta',
     ],
     types: [
       'movie',

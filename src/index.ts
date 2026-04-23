@@ -6,7 +6,7 @@ import express, { NextFunction, Request, Response } from 'express';
 // eslint-disable-next-line import/no-named-as-default
 import rateLimit from 'express-rate-limit';
 import winston from 'winston';
-import { CatalogController, ConfigureController, ExtractController, ManifestController, StreamController } from './controller';
+import { CatalogController, ConfigureController, ExtractController, ManifestController, MetaController, StreamController } from './controller';
 import { BlockedError, logErrorAndReturnNiceString } from './error';
 import { createExtractors, ExtractorRegistry } from './extractor';
 import { ToonWorldCatalog } from './catalog/ToonWorldCatalog';
@@ -210,6 +210,7 @@ addon.use('/', (new ExtractController(logger, fetcher, extractorRegistry)).route
 addon.use('/', (new ConfigureController(sources, extractors)).router);
 addon.use('/', (new ManifestController(sources, extractors)).router);
 addon.use('/', (new CatalogController(toonWorldCatalog)).router);
+addon.use('/', (new MetaController(fetcher)).router);
 
 const streamResolver = new StreamResolver(logger, extractorRegistry);
 addon.use('/', (new StreamController(logger, sources, streamResolver)).router);
