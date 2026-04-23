@@ -49,6 +49,7 @@ export class ToonWorld4All extends Source {
     let name: string = '';
 
     if (id instanceof Tw4aId) {
+      this.fetcher.logger.info(`Handling ToonWorld ID: ${id.toString()}`, ctx);
       showPageUrl = new URL(id.slug, this.baseUrl);
       name = id.slug.replace(/-/g, ' '); // crude name from slug
       if (id.season && id.episode) {
@@ -63,19 +64,23 @@ export class ToonWorld4All extends Source {
     }
 
     if (!showPageUrl || !tmdbId?.season || !tmdbId?.episode) {
+      this.fetcher.logger.warn(`Missing required data for ToonWorld: showPageUrl=${showPageUrl}, season=${tmdbId?.season}, episode=${tmdbId?.episode}`, ctx);
       return [];
     }
 
     // 3. Derive the archive episode slug and fetch the episode page
     const episodeSlug = this.buildEpisodeSlug(showPageUrl, name, tmdbId);
     const episodePageUrl = new URL(`/episode/${episodeSlug}`, this.archiveBaseUrl);
+    this.fetcher.logger.info(`Derived archive episode slug: ${episodeSlug}`, ctx);
 
     let episodeHtml: string;
     try {
       episodeHtml = await this.fetcher.text(ctx, episodePageUrl);
+      this.fetcher.logger.info(`Successfully fetched archive episode page: ${episodePageUrl.href}`, ctx);
     } catch {
       // Episode page not found — try alternate slug derived directly from name
       const fallbackSlug = this.buildFallbackSlug(name, tmdbId);
+      this.fetcher.logger.info(`Primary slug failed, trying fallback: ${fallbackSlug}`, ctx);
       if (fallbackSlug === episodeSlug) {
         return [];
       }
