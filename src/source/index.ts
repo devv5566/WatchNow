@@ -3,6 +3,7 @@ import { FourKHDHub } from './FourKHDHub';
 import { HDHub4u } from './HDHub4u';
 import { Showbox } from './Showbox';
 import { Source } from './Source';
+import { ToonWorld4All } from './ToonWorld4All';
 
 export * from './Source';
 
@@ -13,5 +14,6 @@ export const createSources = (fetcher: Fetcher): Source[] => {
     new FourKHDHub(fetcher),
     new HDHub4u(fetcher),
     new Showbox(fetcher),
+    new ToonWorld4All(fetcher),
   ].filter(source => !disabledSources.includes(source.id));
 };
