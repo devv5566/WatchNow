@@ -18,7 +18,7 @@ export class CatalogController {
   private async getCatalog(req: Request, res: Response) {
     try {
       const id = req.params['id'];
-      const config = parseConfig(req.params['config']);
+      const config = parseConfig(req.params['config'] as string | undefined);
       const ctx = contextFromRequestAndResponse(req, res);
       ctx.config = config;
 

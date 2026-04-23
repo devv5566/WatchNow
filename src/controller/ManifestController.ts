@@ -21,7 +21,7 @@ export class ManifestController {
   }
 
   private getManifest(req: Request, res: Response) {
-    const config: Config = parseConfig(req.params['config']);
+    const config: Config = parseConfig(req.params['config'] as string | undefined);
 
     const manifest = buildManifest(this.sources, this.extractors, config);
 
