@@ -2,8 +2,6 @@ import rot13Cipher from 'rot13-cipher';
 import { Context } from '../types';
 import { Fetcher } from '../utils';
 
-const REDIRECT_HOSTS = ['gadgetsweb.xyz', 'v-cloud.link', 'vgdrive.pro', 'nexdrive.blog'];
-
 export const resolveRedirectUrl = async (ctx: Context, fetcher: Fetcher, redirectUrl: URL): Promise<URL> => {
   const redirectHtml = await fetcher.text(ctx, redirectUrl);
 
