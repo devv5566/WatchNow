@@ -24,7 +24,7 @@ export class HDHub4u extends Source {
 
   public readonly countryCodes: CountryCode[] = [CountryCode.multi, CountryCode.gu, CountryCode.hi, CountryCode.ml, CountryCode.pa, CountryCode.ta, CountryCode.te];
 
-  public readonly baseUrl = 'https://new5.hdhub4u.fo';
+  public readonly baseUrl = 'https://new6.hdhub4u.fo';
 
   private readonly searchUrl = 'https://search.pingora.fyi';
 

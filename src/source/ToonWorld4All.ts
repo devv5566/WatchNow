@@ -242,18 +242,18 @@ export class ToonWorld4All extends Source {
 
       if (!height) continue;
 
-      const files = encode.files || [];
-      for (const file of files) {
-        // Support common hosts on ToonWorld4All
-        const isSupported = /hubcloud|hubdrive|filepress|gdflix|filebee/i.test(file.host);
-        if (isSupported) {
-          tasks.push({
-            redirectHref: file.link,
-            height,
-            title: codec,
-          });
-        }
-      }
+       const files = encode.files || [];
+       for (const file of files) {
+         // Support common hosts on ToonWorld4All
+         const isSupported = /hubcloud|hubdrive|filepress|gdflix|filebee|mega|mirror|appdrive/i.test(file.host);
+         if (isSupported) {
+           tasks.push({
+             redirectHref: file.link,
+             height,
+             title: codec,
+           });
+         }
+       }
     }
 
     if (!tasks.length) {

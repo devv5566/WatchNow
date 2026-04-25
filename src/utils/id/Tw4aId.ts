@@ -10,17 +10,20 @@ export class Tw4aId {
   }
 
   public toString(): string {
-    if (this.season !== undefined && this.episode !== undefined) {
-      return `tw4a:${this.slug}:${this.season}:${this.episode}`;
-    }
-    return `tw4a:${this.slug}`;
+    return this.slug + (this.season !== undefined ? '/' + this.season : '') + (this.episode !== undefined ? ':' + this.episode : '');
   }
 
   public static fromString(id: string): Tw4aId {
-    const parts = id.split(':');
-    const slug = parts[0] as string;
-    const season = parts[1] ? parseInt(parts[1]) : undefined;
-    const episode = parts[2] ? parseInt(parts[2]) : undefined;
-    return new Tw4aId(slug, season, episode);
+    // Accept both "slug" and "slug/season:episode"
+    const m = id.match(/^(?<slug>[\w-]+)(\/(?<season>\d+))?(:(?<episode>\d+))?$/);
+    if (!m) {
+      throw new Error(`Invalid Tw4aId string: ${id}`);
+    }
+    const { slug, season, episode } = m.groups!;
+    return new Tw4aId(
+      slug!,
+      season ? parseInt(season) : undefined,
+      episode ? parseInt(episode) : undefined,
+    );
   }
 }

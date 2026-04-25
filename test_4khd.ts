@@ -14,7 +14,7 @@ async function test() {
   } as any;
 
   try {
-    const results = await source.handleInternal(ctx, 'movie', new TmdbId(533535));
+    const results = await source.handleInternal(ctx, 'movie' as any, new TmdbId(533535, undefined, undefined));
     console.log('Results:', JSON.stringify(results.map(r => r.url.href), null, 2));
   } catch(e) {
     console.error('Err:', e);

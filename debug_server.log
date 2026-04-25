@@ -1,0 +1,5 @@
+
+> swordwatch@1.14.0 start
+> node dist/index.js
+
+2026-04-23T22:05:54.382Z [32minfo[39m undefined:     Add-on Repository URL: http://127.0.0.1:51546/manifest.json
