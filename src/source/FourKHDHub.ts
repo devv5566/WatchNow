@@ -46,7 +46,7 @@ export class FourKHDHub extends Source {
     const $ = cheerio.load(html);
 
     if (tmdbId.season) {
-      return (await Promise.all(
+      return Promise.all(
         $(`.episode-item`)
           .filter((_i, el) => $('.episode-title', el).text().includes(`S${String(tmdbId.season).padStart(2, '0')}`))
           .map((_i, el) => ({
@@ -57,14 +57,14 @@ export class FourKHDHub extends Source {
           })).filter((_i, { downloadItem }) => downloadItem !== undefined)
           .map(async (_id, { countryCodes, downloadItem }) => await this.extractSourceResults(ctx, $, downloadItem as BasicAcceptedElems<AnyNode>, countryCodes))
           .toArray(),
-      )).filter(result => result !== null) as SourceResult[];
+      );
     }
 
-    return (await Promise.all(
+    return Promise.all(
       $(`.download-item`)
         .map(async (_i, el) => await this.extractSourceResults(ctx, $, el, [CountryCode.multi, ...findCountryCodes($(el).html() as string)]))
         .toArray(),
-    )).filter(result => result !== null) as SourceResult[];
+    );
   };
 
   private readonly fetchPageUrl = async (ctx: Context, tmdbId: TmdbId): Promise<URL | undefined> => {
@@ -75,7 +75,13 @@ export class FourKHDHub extends Source {
 
     const $ = cheerio.load(html);
 
-    return $(`.movie-card:has(.movie-card-format:contains("${tmdbId.season ? 'Series' : 'Movies'}"))`)
+    const typeSlug = tmdbId.season ? '-series-' : '-movie-';
+
+    return $(`.movie-card`)
+      .filter((_i, el) => {
+        const href = String($(el).attr('href'));
+        return href.includes(typeSlug);
+      })
       .filter((_i, el) => {
         const movieCardYear = parseInt($('.movie-card-meta', el).text());
 
@@ -96,20 +102,16 @@ export class FourKHDHub extends Source {
       .get(0);
   };
 
-  private readonly extractSourceResults = async (ctx: Context, $: CheerioAPI, el: BasicAcceptedElems<AnyNode>, countryCodes: CountryCode[]): Promise<SourceResult | null> => {
+  private readonly extractSourceResults = async (ctx: Context, $: CheerioAPI, el: BasicAcceptedElems<AnyNode>, countryCodes: CountryCode[]): Promise<SourceResult> => {
     const localHtml = $(el).html() as string;
 
     const sizeMatch = localHtml.match(/([\d.]+ ?[GM]B)/);
-    const heightMatch = localHtml.match(/\d{3,}p/);
-
-    if (!heightMatch) {
-      return null;
-    }
+    const heightMatch = localHtml.match(/\d{3,}p/) as string[];
 
     const meta: Meta = {
       countryCodes: [...new Set([...countryCodes, ...findCountryCodes(localHtml)])],
-      height: parseInt(heightMatch[0]),
-      title: $('.file-title, .episode-file-title, h4', el).first().text().trim() || $('title').text().trim(),
+      height: parseInt(heightMatch[0] as string),
+      title: $('.file-title, .episode-file-title', el).text().trim(),
       ...(sizeMatch && { bytes: bytes.parse(sizeMatch[1] as string) as number }),
     };
 
