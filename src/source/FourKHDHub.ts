@@ -111,7 +111,7 @@ export class FourKHDHub extends Source {
 
       const meta: Meta = {
         countryCodes: [...new Set([...countryCodes, ...findCountryCodes(localHtml)])],
-        height: parseInt(heightMatch ? heightMatch[0] : '0'),
+        height: parseInt((heightMatch && heightMatch[0]) || '0'),
         title: $('.file-title, .episode-file-title', el).text().trim(),
         ...(sizeMatch && { bytes: bytes.parse(sizeMatch[1] as string) as number }),
       };
