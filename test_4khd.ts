@@ -1,3 +1,4 @@
+
 import { Fetcher, TmdbId } from './src/utils';
 import { FourKHDHub } from './src/source/FourKHDHub';
 import axios from 'axios';
@@ -13,9 +14,17 @@ async function test() {
     useragent: 'test'
   } as any;
 
+  // Mocking the TMDB access token if needed, or just hardcoding the name/year
+  // But wait, the source uses getTmdbNameAndYear which needs it.
+  
+  // I'll try to use a real ID if possible.
+  
   try {
-    const results = await source.handleInternal(ctx, 'movie' as any, new TmdbId(533535, undefined, undefined));
-    console.log('Results:', JSON.stringify(results.map(r => r.url.href), null, 2));
+    const results = await source.handleInternal(ctx, 'movie' as any, new TmdbId(475557, undefined, undefined)); // Joker (2019)
+    console.log('Results count:', results.length);
+    results.forEach((r, i) => {
+        console.log(`Result ${i}: ${r.meta.title} - ${r.url.href}`);
+    });
   } catch(e) {
     console.error('Err:', e);
   }

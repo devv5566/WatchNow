@@ -46,7 +46,7 @@ export class FourKHDHub extends Source {
     const $ = cheerio.load(html);
 
     if (tmdbId.season) {
-      return Promise.all(
+      return (await Promise.all(
         $(`.episode-item`)
           .filter((_i, el) => $('.episode-title', el).text().includes(`S${String(tmdbId.season).padStart(2, '0')}`))
           .map((_i, el) => ({
@@ -57,14 +57,14 @@ export class FourKHDHub extends Source {
           })).filter((_i, { downloadItem }) => downloadItem !== undefined)
           .map(async (_id, { countryCodes, downloadItem }) => await this.extractSourceResults(ctx, $, downloadItem as BasicAcceptedElems<AnyNode>, countryCodes))
           .toArray(),
-      );
+      )).filter(result => result !== null) as SourceResult[];
     }
 
-    return Promise.all(
+    return (await Promise.all(
       $(`.download-item`)
         .map(async (_i, el) => await this.extractSourceResults(ctx, $, el, [CountryCode.multi, ...findCountryCodes($(el).html() as string)]))
         .toArray(),
-    );
+    )).filter(result => result !== null) as SourceResult[];
   };
 
   private readonly fetchPageUrl = async (ctx: Context, tmdbId: TmdbId): Promise<URL | undefined> => {
@@ -102,34 +102,43 @@ export class FourKHDHub extends Source {
       .get(0);
   };
 
-  private readonly extractSourceResults = async (ctx: Context, $: CheerioAPI, el: BasicAcceptedElems<AnyNode>, countryCodes: CountryCode[]): Promise<SourceResult> => {
-    const localHtml = $(el).html() as string;
+  private readonly extractSourceResults = async (ctx: Context, $: CheerioAPI, el: BasicAcceptedElems<AnyNode>, countryCodes: CountryCode[]): Promise<SourceResult | null> => {
+    try {
+      const localHtml = $(el).html() as string;
 
-    const sizeMatch = localHtml.match(/([\d.]+ ?[GM]B)/);
-    const heightMatch = localHtml.match(/\d{3,}p/) as string[];
+      const sizeMatch = localHtml.match(/([\d.]+ ?[GM]B)/);
+      const heightMatch = localHtml.match(/\d{3,}p/) as string[];
 
-    const meta: Meta = {
-      countryCodes: [...new Set([...countryCodes, ...findCountryCodes(localHtml)])],
-      height: parseInt(heightMatch[0] as string),
-      title: $('.file-title, .episode-file-title', el).text().trim(),
-      ...(sizeMatch && { bytes: bytes.parse(sizeMatch[1] as string) as number }),
-    };
+      const meta: Meta = {
+        countryCodes: [...new Set([...countryCodes, ...findCountryCodes(localHtml)])],
+        height: parseInt(heightMatch ? heightMatch[0] : '0'),
+        title: $('.file-title, .episode-file-title', el).text().trim(),
+        ...(sizeMatch && { bytes: bytes.parse(sizeMatch[1] as string) as number }),
+      };
 
-    const redirectUrlHubCloud = $('a', el)
-      .filter((_i, el) => $(el).text().includes('HubCloud'))
-      .map((_i, el) => new URL($(el).attr('href') as string))
-      .get(0);
+      const redirectUrlHubCloud = $('a', el)
+        .filter((_i, el) => $(el).text().includes('HubCloud'))
+        .map((_i, el) => new URL($(el).attr('href') as string))
+        .get(0);
 
-    if (redirectUrlHubCloud) {
-      return { url: await resolveRedirectUrl(ctx, this.fetcher, redirectUrlHubCloud), meta };
+      if (redirectUrlHubCloud) {
+        return { url: await resolveRedirectUrl(ctx, this.fetcher, redirectUrlHubCloud), meta };
+      }
+
+      const redirectUrlHubDrive = $('a', el)
+        .filter((_i, el) => $(el).text().includes('HubDrive'))
+        .map((_i, el) => new URL($(el).attr('href') as string))
+        .get(0);
+
+      if (redirectUrlHubDrive) {
+        return { url: await resolveRedirectUrl(ctx, this.fetcher, redirectUrlHubDrive), meta };
+      }
+
+      return null;
+    } catch (e) {
+      console.error(`[4khdhub] Error extracting results: ${e}`);
+      return null;
     }
-
-    const redirectUrlHubDrive = $('a', el)
-      .filter((_i, el) => $(el).text().includes('HubDrive'))
-      .map((_i, el) => new URL($(el).attr('href') as string))
-      .get(0) as URL;
-
-    return { url: await resolveRedirectUrl(ctx, this.fetcher, redirectUrlHubDrive), meta };
   };
 
   private readonly getBaseUrl = async (ctx: Context): Promise<URL> => {
