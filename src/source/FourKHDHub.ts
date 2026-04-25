@@ -13,7 +13,7 @@ import { Source, SourceResult } from './Source';
 export class FourKHDHub extends Source {
   public readonly id = '4khdhub';
 
-  public readonly label = '4KHDHub';
+  public readonly label = '4K-HDHub';
 
   public readonly contentTypes: ContentType[] = ['movie', 'series'];
 
